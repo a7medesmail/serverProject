@@ -17,7 +17,7 @@ For compile code : # gcc concurrent.c -o concurrent
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <dirent.h>
 
 /* Socket API headers */
 
@@ -149,10 +149,33 @@ int main(int argc, char *argv[])  //how to take arguments, argv is array of stri
         } else {
             printf("Unable to change directory to %s\n", argv[2]);
         }
+        
+        
+    //print working directory in 3 lines, uses dirent.h library
+	char cwd[1024]; 
+    getcwd(cwd, sizeof(cwd)); 
+    printf("Current working dir: %s\n", cwd); 
 	
 	
-
-
+	//to read the file given in -u user.txt
+	FILE *fp = fopen("user.txt", "r"); //open file
+	
+	char line[256]; //a variable to put a line inside of it
+	while (fgets(line, sizeof(line), fp) != NULL) //read each line by fgets() function
+	{   //to split id, and password: 
+		char *idStr = strtok(line, ":");  //char *x = "hi"  ---> means x is a pointer to the string 'hi'
+		char *password = strtok(NULL, ":");
+		
+		int id = atoi(idStr);
+		
+		printf("The id is %d", id);  
+		printf("The password is %s", password);
+	}
+	fclose(fp);//close the file whew!
+ 	//reading the txt file with the format given in APPENDIX (last page of the project details) is DONE!
+ 	
+ 	
+	
 
 
 
