@@ -24,7 +24,9 @@
 //#define PORT 6571 hide it because take an argument
 #define BUF_LEN  2000
 #define STDIN 0
-#define SADDR "127.0.0.1" //I think this is -h
+//#define SADDR "127.0.0.1" //I think this is -h, okay there is bugs, it is working, but if you connect right ip 127.0.0.1 then connect wrong, it will also connect,
+//but if you connected wrong first it will not accepts it, you have to reset the server so it will not save the connection data
+//also if you connect to 127.10.0.1 it will work IDK how --> BUT IT IS WORKING!
 #define TV_SEC 10
 
 
@@ -32,15 +34,17 @@ void test_fds(fd_set testfds, int sock) {
 int nread;
 char buffer[BUF_LEN];
 
+
+
   if (FD_ISSET(STDIN, &testfds)) {
-ioctl(STDIN,FIONREAD,&nread);
-if (nread == 0) {
+	ioctl(STDIN,FIONREAD,&nread);
+	if (nread == 0) {
         printf("Keyboard done!\n");
   exit(0);
-}
+	}
         nread = read(STDIN, buffer, nread);
 buffer[nread] = '\0';
-write(sock, buffer, nread);
+write(sock, buffer, nread);    
       }
 
       if (FD_ISSET(sock, &testfds)) {
@@ -65,12 +69,14 @@ int main(int argc, char **argv)
 	int maxfd,stdeof,c,ret;
 	char *saddr = NULL, *sport = NULL;
 	
+	
+	// ./smsclient -h server -p port -u user -p password   
 	//take arguments, for explanation check server application
 	printf("argc: %d\n", argc); //all numbers of the arguments   //this should be a loop but to understand it better, I used one by one, also it must be hided later on
 	
 	printf("argv[0]=%s\n", argv[0]); // name of the program " client "
 	printf("argv[1]=%s\n", argv[1]);// -h
-	printf("argv[2]=%s\n", argv[2]);// server
+	printf("argv[2]=%s\n", argv[2]);// server IP
 	printf("argv[3]=%s\n", argv[3]);// third argument -p ..
 	printf("argv[4]=%s\n", argv[4]); // port
 	printf("argv[5]=%s\n", argv[5]);//  -u
@@ -97,6 +103,9 @@ while ((c = getopt (argc, argv, "p:s:")) != -1)
         default:
             abort ();
     }*/
+//wow, this is how to manipulate args, and else where check it if sport, or port, Amazing!
+
+
 
     /* Open socket descriptor */
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
@@ -115,10 +124,11 @@ while ((c = getopt (argc, argv, "p:s:")) != -1)
         server_addr.sin_port = htons(port);
 
     /* Remote ip address defined? */
+    /*
     if ( saddr != NULL )
         inet_pton(AF_INET, saddr, &(server_addr.sin_addr));
-    else
-        inet_pton(AF_INET, SADDR , &(server_addr.sin_addr));
+    else*/
+        inet_pton(AF_INET, argv[2] , &(server_addr.sin_addr));  //here changed SADDR to argv[2]  
 
 
     /* Connect to remote server */
