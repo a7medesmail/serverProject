@@ -130,15 +130,8 @@ int main(int argc, char *argv[])  //how to take arguments, argv is array of stri
 	printf("argv[5]=%s\n", argv[5]);// -u
 	printf("argv[6]=%s\n", argv[6]);// user.txt
 	int port = atoi(argv[4]);//change port from string to int
-	//PORT = argv[4]; // this is not working, so I replaced every PORT with argv[4]
-	/*
-
-	printf("Enter Port Number: ");
-
-	scanf("%d", PORT);   //for now enter it manually until I learn how to do it from the argument ./server -d ddd -p xxxx user.txt, aslo for directory it is left for now
-
-	this did not work it gave me "Segmentation fault (core dumped) error"
-	*/
+	
+	
 	
 	//change the directory
 
@@ -151,7 +144,7 @@ int main(int argc, char *argv[])  //how to take arguments, argv is array of stri
         }
         
         
-    //print working directory in 3 lines, uses dirent.h library
+    //print working directory in 3 lines, uses dirent.h library, to check where we are, must be hided later
 	char cwd[1024]; 
     getcwd(cwd, sizeof(cwd)); 
     printf("Current working dir: %s\n", cwd); 
@@ -209,7 +202,7 @@ if ((server = socket( AF_INET, SOCK_STREAM, 0)) < 0 ) {
 
 /* Fill local and remote address structure with zero */
 
-memset( &local_addr, 0, sizeof(local_addr) );
+memset( &local_addr, 0, sizeof(local_addr) ); //limit amount of data sent or received
 
 memset( &remote_addr, 0, sizeof(remote_addr) );
 
@@ -259,7 +252,7 @@ if ( listen( server, SOMAXCONN ) < 0 ) {
 
 
 
-printf("Concurrent  socket server now starting on port %d\n", port); //here argv[4] or port,  two places to change it
+printf("Concurrent  socket server now starting on port %d\n", port); //here argv[4] or port,  two places to change it, the other before
 
 printf("Wait for connection\n");
 
