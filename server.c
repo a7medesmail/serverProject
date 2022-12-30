@@ -46,6 +46,9 @@ char recvbuf[DEFAULT_BUFLEN],bmsg[DEFAULT_BUFLEN];
 int  recvbuflen = DEFAULT_BUFLEN;
 
 
+const char* welcome_msg = "+OK My Chat Server v0.1 Ready."; //page 3 of the project, Server and Client comms
+rcnt = send(fd, welcome_msg, strlen(welcome_msg), 0);//done it is working, but the client should send a message first, why ?
+
 
     // Receive until the peer shuts down the connection
 
@@ -261,6 +264,9 @@ printf("Wait for connection\n");
 while(1) {  // main accept() loop
 
     length = sizeof remote_addr;
+    
+
+
 
     if ((fd = accept(server, (struct sockaddr *)&remote_addr, \
 
@@ -272,28 +278,28 @@ while(1) {  // main accept() loop
 
     }
 
-
-
+	
+	
     printf("Server: got connection from %s\n", \
 
             inet_ntoa(remote_addr.sin_addr));
-
+            
+	
 
 
     /* If fork create Child, take control over child and close on server side */
-
+	
     if ((pid=fork()) == 0) {
 
         close(server);
 
-        do_job(fd);
+        do_job(fd); //the problem is this function does not work until the client send a message first
 
         printf("Child finished their job!\n");
 
         close(fd);
 
         exit(0);
-
     }
 
 
