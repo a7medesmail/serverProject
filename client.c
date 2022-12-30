@@ -36,28 +36,34 @@ char buffer[BUF_LEN];
 
 
 
-  if (FD_ISSET(STDIN, &testfds)) {
-	ioctl(STDIN,FIONREAD,&nread);
-	if (nread == 0) {
-        printf("Keyboard done!\n");
-  exit(0);
-	}
+  if (FD_ISSET(STDIN, &testfds)) 
+    {
+    	ioctl(STDIN,FIONREAD,&nread);
+		if (nread == 0) 
+		{
+       		printf("Keyboard done!\n");
+  			exit(0);
+		}
         nread = read(STDIN, buffer, nread);
-buffer[nread] = '\0';
-write(sock, buffer, nread);    
-      }
+		buffer[nread] = '\0';
+		write(sock, buffer, nread);     //write means sending	
+	}
 
-      if (FD_ISSET(sock, &testfds)) {
-ioctl(sock,FIONREAD,&nread);
-if (nread == 0) {
-        printf("Socket done!\n");
-  exit(0);
-}
-        nread = read(sock, buffer, nread);
-buffer[nread] = '\0';
+    if (FD_ISSET(sock, &testfds)) 
+	{
+		ioctl(sock,FIONREAD,&nread);
+		if (nread == 0)
+		{
+			printf("Socket done!\n");
+			exit(0);
+		}
+	    nread = read(sock, buffer, nread); //read means receiving
+		buffer[nread] = '\0';
         printf("%s", buffer);
-      }
-}
+    }
+      
+      
+}//end
 
 int main(int argc, char **argv)
 {
@@ -150,7 +156,8 @@ while (1) {
 
 // don't care about writefds and exceptfds:
     ret=select(FD_SETSIZE, &testfds, (fd_set *)NULL, (fd_set *)NULL, &tv);
-
+    test_fds(testfds,sock);//
+/*
     switch (ret) {
 case 0:
           printf("Timed out.\n");
@@ -161,6 +168,7 @@ case -1:
     default:
       test_fds(testfds,sock);
   break;
-    }
-  }
+    }*/
+    
+  }//while(1)
 }
