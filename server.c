@@ -18,6 +18,7 @@ For compile code : # gcc concurrent.c -o concurrent
 #include <stdio.h>
 #include <stdlib.h>
 #include <dirent.h>
+#include <stdbool.h>
 
 /* Socket API headers */
 
@@ -44,6 +45,7 @@ int length,rcnt;
 char recvbuf[DEFAULT_BUFLEN],bmsg[DEFAULT_BUFLEN];
 
 int  recvbuflen = DEFAULT_BUFLEN;
+bool is_auth = false;
 
 
 const char* welcome_msg = "+OK My Chat Server v0.1 Ready."; //page 3 of the project, Server and Client comms
@@ -56,6 +58,59 @@ rcnt = send(fd, welcome_msg, strlen(welcome_msg), 0);//done it is working, but t
 
         rcnt = recv(fd, recvbuf, recvbuflen, 0);
 
+		if (strncmp(recvbuf, "USER", 4) == 0) //check if the user used USER command 
+		// this part took me more than 8 hours, it can now authenticate by USER command, but there are extra letters, but it is working
+		{
+			
+            char user[64]; //password
+            int user_id; //real id
+            char password[64]; //useless
+            
+            sscanf(recvbuf, "USER %d %s", &user_id, user);
+            
+            //sscanf(recvbuf, "myPass %s", password);
+            
+            printf("user_id: %d\n", user_id);
+				printf("user: %s\n", user);
+					printf("password : %s\n", password);
+            
+            //to read the file given in -u user.txt, and check for username and password
+			FILE *fp = fopen("user.txt", "r"); //open file
+
+			char line[256]; //a variable to put a line inside of it
+			while (fgets(line, sizeof(line), fp) != NULL) //read each line by fgets() function
+			{   //to split id, and password: 
+			//	char *idStr = strtok(line, ":");  //char *x = "hi"  ---> means x is a pointer to the string 'hi'
+			//	char *password1 = strtok(NULL, ":");
+				
+			//	char pass1[strlen(password1) + 1];
+			//	strcpy(pass1, password1);
+				
+				char col1[256], col2[256]; 
+				sscanf(line, "%[^:]:%s", col1, col2);
+				
+				  
+			//	printf ("password1:  %s",password1); 
+				//int id = atoi(idStr); //atoi convert char string to int
+				int id = atoi(col1);
+				if (user_id == id  ) //check user and password (compare)
+				{
+					if (strcmp(user, col2) == 0)
+					{
+						is_auth = true;
+						printf("nice");
+					}
+					else
+					{
+						printf("not the same");
+					}	
+			  	}
+			}
+			fclose(fp);//close the file whew!
+		 	//reading the txt file with the format given in APPENDIX (last page of the project details) is DONE!
+        }
+		
+		
         if (rcnt > 0) {
 
             printf("Message: ");  //changed to show what recieved recvbuf
@@ -153,28 +208,10 @@ int main(int argc, char *argv[])  //how to take arguments, argv is array of stri
     printf("Current working dir: %s\n", cwd); 
 	
 	
-	//to read the file given in -u user.txt
-	FILE *fp = fopen("user.txt", "r"); //open file
-	
-	char line[256]; //a variable to put a line inside of it
-	while (fgets(line, sizeof(line), fp) != NULL) //read each line by fgets() function
-	{   //to split id, and password: 
-		char *idStr = strtok(line, ":");  //char *x = "hi"  ---> means x is a pointer to the string 'hi'
-		char *password = strtok(NULL, ":");
-		
-		int id = atoi(idStr);
-		
-		printf("The id is %d", id);  
-		printf("The password is %s", password);
-	}
-	fclose(fp);//close the file whew!
- 	//reading the txt file with the format given in APPENDIX (last page of the project details) is DONE!
+
  	
  	
 	
-
-
-
 
 
 int server, client;
