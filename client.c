@@ -35,8 +35,8 @@ int nread;
 char buffer[BUF_LEN];
 
 
-
-  if (FD_ISSET(STDIN, &testfds)) 
+	
+	if (FD_ISSET(STDIN, &testfds)) 
     {
     	ioctl(STDIN,FIONREAD,&nread);
 		if (nread == 0) 
@@ -149,6 +149,7 @@ while ((c = getopt (argc, argv, "p:s:")) != -1)
     FD_SET(sock, &readfds);
 
 while (1) {
+	
     testfds=readfds;
 
     tv.tv_sec = TV_SEC;
