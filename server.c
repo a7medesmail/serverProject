@@ -39,7 +39,7 @@ For compile code : # gcc concurrent.c -o concurrent
 
 
 void do_job(int fd) {
-
+//printf("\n dojob worked \n");  //this function only works once for every new connection
 int length,rcnt;
 
 char recvbuf[DEFAULT_BUFLEN],bmsg[DEFAULT_BUFLEN];
@@ -47,24 +47,30 @@ char recvbuf[DEFAULT_BUFLEN],bmsg[DEFAULT_BUFLEN];
 int  recvbuflen = DEFAULT_BUFLEN;
 bool is_auth = false;
 
-
 const char* welcome_msg = "+OK My Chat Server v0.1 Ready."; //page 3 of the project, Server and Client comms
 rcnt = send(fd, welcome_msg, strlen(welcome_msg), 0);//done it is working, but the client should send a message first, why ?
 
 
-    // Receive until the peer shuts down the connection
+//variables for authentication
+char user[64]; //password
+int user_id; //real id
+char password[64]; //useless
 
+    // Receive until the peer shuts down the connection
+	//you are always inside this do until finishing the comms
     do {
 
         rcnt = recv(fd, recvbuf, recvbuflen, 0);
-
+        
+		
+		rcnt = send( fd, recvbuf, rcnt, 0 ); //this must reply first so the client recive any other thing, why??..
+		
+		
+		
 		if (strncmp(recvbuf, "USER", 4) == 0) //check if the user used USER command 
 		// this part took me more than 8 hours, it can now authenticate by USER command, but there are extra letters, but it is working
 		{
 			
-            char user[64]; //password
-            int user_id; //real id
-            char password[64]; //useless
             
             sscanf(recvbuf, "USER %d %s", &user_id, user);
             
@@ -105,31 +111,81 @@ rcnt = send(fd, welcome_msg, strlen(welcome_msg), 0);//done it is working, but t
 						printf("not the same");
 					}	
 			  	}
+			  	else
+			  	{
+			  		is_auth = false; //must handle if the user changed the username without the password
+				}
 			}
 			fclose(fp);//close the file whew!
 		 	//reading the txt file with the format given in APPENDIX (last page of the project details) is DONE!
         }
+        
+        if (strncmp(recvbuf, "LIST", 4) == 0) //listing the messages in the subdirectory for each user
+        {
+        	printf("list is working");
+        	//change to the subdirectory
+        	
+        	char subD[100];
+        	sprintf(subD, "%d", user_id); //int to string
+			printf("%s\n", subD);
+			
+        	int result = chdir(subD);
+        	if (result == 0) 
+			{
+					printf("Changed directory to %s\n", subD);
+				
+					int num = 1;
+				    char *ptr;
+				    char file_name[50];
+				    
+				    
+					for(;;) 
+					{
+				        sprintf(file_name, "%d.msg", num);
+				        if(access(file_name, F_OK) != -1) 
+						{
+				            ptr = strtok(file_name, "_");
+				            printf("%d %s ", num, ptr);
+				            ptr = strtok(NULL, "_");
+				            printf("%s ", ptr);
+				            ptr = strtok(NULL, "_");
+				            printf("%s ", ptr);
+				            ptr = strtok(NULL, ".");
+				            printf("%s\n", ptr);
+				            num++;
+				        } 
+						else 
+						{
+				            break;
+				        }
+				    }
+				
+				
+       		} 
+			else 
+			{
+            	printf("Unable to change directory to %s\n", subD);
+       		}
+       	
+       		
+		}
+        
+        
 		
 		
-        if (rcnt > 0) {
+        if (rcnt > 0) 
+		{
 
             printf("Message: ");  //changed to show what recieved recvbuf
 
             printf(recvbuf);
-
-            
-
-            
-
-		
-
         // Echo the buffer back to the sender  // hided because don't want echo
 
         //if (recvbuf == "admin") //new
 
-        rcnt = send( fd, recvbuf, rcnt, 0 );
+        //rcnt = send( fd, recvbuf, rcnt, 0 ); // without this, a lot is not working, like wolcome message
 
-            if (rcnt < 0) {
+           /* if (rcnt < 0) {
 
                 printf("Send failed:\n");
 
@@ -137,23 +193,17 @@ rcnt = send(fd, welcome_msg, strlen(welcome_msg), 0);//done it is working, but t
 
                 break;
 
-            }
+            }*/
 
             //printf("Bytes sent: %d\n", rcnt);
-
-            
-
-        
-
-
-
-        }
+		}//print what received
 
         else if (rcnt == 0)
 
             printf("Connection closing...\n");
 
-        else  {
+        else  
+		{
 
             printf("Receive failed:\n");
 
@@ -162,6 +212,7 @@ rcnt = send(fd, welcome_msg, strlen(welcome_msg), 0);//done it is working, but t
             break;
 
         }
+        
 
     } while (rcnt > 0);
 
@@ -299,6 +350,7 @@ printf("Wait for connection\n");
 
 
 while(1) {  // main accept() loop
+	
 
     length = sizeof remote_addr;
     
@@ -327,7 +379,7 @@ while(1) {  // main accept() loop
     /* If fork create Child, take control over child and close on server side */
 	
     if ((pid=fork()) == 0) {
-
+		
         close(server);
 
         do_job(fd); //the problem is this function does not work until the client send a message first
