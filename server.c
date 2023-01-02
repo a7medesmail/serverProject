@@ -121,6 +121,7 @@ char password[64]; //useless
         }
         
         if (strncmp(recvbuf, "LIST", 4) == 0) //listing the messages in the subdirectory for each user
+        //after two days of working, done reading the file name and display it in the required format
         {
         	printf("list is working");
         	//change to the subdirectory
@@ -132,40 +133,112 @@ char password[64]; //useless
         	int result = chdir(subD);
         	if (result == 0) 
 			{
-					printf("Changed directory to %s\n", subD);
+				printf("Changed directory to %s\n", subD);
 				
-					int num = 1;
-				    char *ptr;
-				    char file_name[50];
+				char cwd[1024]; 
+			    getcwd(cwd, sizeof(cwd)); 
+			    printf("Current working dir: %s\n", cwd); 
+			    
+				
+			    char *ptr;
+			    char file_name[50];
+			    
+			    DIR *dir;
+			    dir = opendir(cwd); // i think it should be equal to 
+			    int counter = 100, i=0;
+			    struct dirent *entry;
+				while( (entry = readdir( dir )) != NULL ) {
+				    // copy the filename into a new variable
+				    char *filename = strdup(entry->d_name);
+				
+				    // extract info from filename
+				    int num = i++;
+				    int from_id, unix_time_stamp, octets;
+				    sscanf(filename, "%d_%d_%d.msg", &from_id, &unix_time_stamp, &octets);
+				
+				    // print the extracted info
+				    printf("%d %d %d %d\n", num, from_id, unix_time_stamp, octets);
+				
+				    // free the memory allocated for the new variable
+				    free(filename);
+				    counter--;
+				}
+			    
+			    
+			    
+			    
+			    /*
+			    struct dirent *entry;
+			    int counter = 100, i=0;
+				while( counter > 0 ) {
+					printf("workiiiiiiiiiiing");
+					
+					
+				    char *filename = entry->d_name;
 				    
 				    
-					for(;;) 
+				        // extract info from filename
+				    int num = i++;
+				    int from_id, unix_time_stamp, octets;
+				    sscanf(filename, "%d_%d_%d.msg", &from_id, &unix_time_stamp, &octets);
+				
+				    // print the extracted info
+				    printf("%d %d %d %d\n", num, from_id, unix_time_stamp, octets);
+
+				    
+				    /*
+				    // extract info from filename
+					char *p;
+					p = strtok(filename, "_");
+					int num = atoi(p);
+					
+					p = strtok(NULL, "_");
+					int from_id = atoi(p);
+					
+					p = strtok(NULL, "_");
+					int unix_time_stamp = atoi(p);
+					
+					p = strtok(NULL, ".msg");
+					int octets = atoi(p);
+					/*
+					// print the extracted info
+					printf("%d %d %d %d\n", num, from_id, unix_time_stamp, octets);
+					*/
+					
+				}
+				
+				
+			    
+			    /*
+				for(;;) 
+				{
+			        sprintf(file_name, "%d.msg", num);
+			        if(access(file_name, F_OK) != -1) 
 					{
-				        sprintf(file_name, "%d.msg", num);
-				        if(access(file_name, F_OK) != -1) 
-						{
-				            ptr = strtok(file_name, "_");
-				            printf("%d %s ", num, ptr);
-				            ptr = strtok(NULL, "_");
-				            printf("%s ", ptr);
-				            ptr = strtok(NULL, "_");
-				            printf("%s ", ptr);
-				            ptr = strtok(NULL, ".");
-				            printf("%s\n", ptr);
-				            num++;
-				        } 
-						else 
-						{
-				            break;
-				        }
-				    }
+						printf("workiiiiiiiiiiing");
+			            ptr = strtok(file_name, "_");
+			            printf("%d %s ", num, ptr);
+			            ptr = strtok(NULL, "_");
+			            printf("%s ", ptr);
+			            ptr = strtok(NULL, "_");
+			            printf("%s ", ptr);
+			            ptr = strtok(NULL, ".");
+			            printf("%s\n", ptr);
+			            num++;
+			        } 
+					else 
+					{
+			            break;
+			        }
+			    }
+				*/
 				
-				
-       		} 
+       		
 			else 
 			{
             	printf("Unable to change directory to %s\n", subD);
        		}
+       		
        	
        		
 		}
@@ -217,6 +290,7 @@ char password[64]; //useless
     } while (rcnt > 0);
 
 }
+
 
 
 
