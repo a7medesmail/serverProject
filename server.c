@@ -131,39 +131,44 @@ char password[64]; //useless
 			printf("%s\n", subD);
 			
         	int result = chdir(subD);
-        	if (result == 0) 
-			{
-				printf("Changed directory to %s\n", subD);
+        	
 				
-				char cwd[1024]; 
-			    getcwd(cwd, sizeof(cwd)); 
-			    printf("Current working dir: %s\n", cwd); 
+				
+			char cwd[1024]; 
+		    getcwd(cwd, sizeof(cwd)); 
+		    printf("Current working dir: %s\n", cwd); 
+		    
+			
+		    char *ptr;
+		    char file_name[50];
+		    
+		    DIR *dir;
+		    dir = opendir(cwd); // i think it should be equal to 
+		    int counter = 100, i=1;
+		    int num =1;
+		    
+		    //I have no idea what are this new function, but it all help reading the file name
+		    struct dirent *entry;
+		   // const char list[1000]; //this will be sent
+			while( (entry = readdir( dir )) != NULL ) 
+			{  
+			    // copy the filename into a new variable
+			    char *filename = strdup(entry->d_name);
+			
+			    // extract info from filename
 			    
-				
-			    char *ptr;
-			    char file_name[50];
-			    
-			    DIR *dir;
-			    dir = opendir(cwd); // i think it should be equal to 
-			    int counter = 100, i=0;
-			    struct dirent *entry;
-				while( (entry = readdir( dir )) != NULL ) {
-				    // copy the filename into a new variable
-				    char *filename = strdup(entry->d_name);
-				
-				    // extract info from filename
-				    int num = i++;
-				    int from_id, unix_time_stamp, octets;
-				    sscanf(filename, "%d_%d_%d.msg", &from_id, &unix_time_stamp, &octets);
-				
-				    // print the extracted info
-				    printf("%d %d %d %d\n", num, from_id, unix_time_stamp, octets);
-				
-				    // free the memory allocated for the new variable
-				    free(filename);
-				    counter--;
-				}
-			    
+			    int from_id, unix_time_stamp, octets;
+			    sscanf(filename, "%d_%d_%d.msg", &from_id, &unix_time_stamp, &octets);
+			
+			    // print the extracted info
+			    printf("%d %d %d %d\n", num, from_id, unix_time_stamp, octets);
+			
+			    // free the memory allocated for the new variable
+			    free(filename);
+			    num = ++i;
+			}
+			
+		//	rcnt = send(fd, welcome_msg, strlen(welcome_msg), 0);//done it is working, but the client should send a message first, why ?
 			    
 			    
 			    
@@ -205,7 +210,7 @@ char password[64]; //useless
 					printf("%d %d %d %d\n", num, from_id, unix_time_stamp, octets);
 					*/
 					
-				}
+				
 				
 				
 			    
@@ -231,16 +236,7 @@ char password[64]; //useless
 			            break;
 			        }
 			    }
-				*/
-				
-       		
-			else 
-			{
-            	printf("Unable to change directory to %s\n", subD);
-       		}
-       		
-       	
-       		
+				*/	
 		}
         
         
