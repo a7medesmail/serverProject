@@ -47,9 +47,10 @@ char recvbuf[DEFAULT_BUFLEN],bmsg[DEFAULT_BUFLEN];
 int  recvbuflen = DEFAULT_BUFLEN;
 bool is_auth = false;
 
+rcnt = recv(fd, recvbuf, recvbuflen, 0);
 const char* welcome_msg = "+OK My Chat Server v0.1 Ready."; //page 3 of the project, Server and Client comms
 rcnt = send(fd, welcome_msg, strlen(welcome_msg), 0);//done it is working, but the client should send a message first, why ?
-
+//rcnt = send( fd, recvbuf, rcnt, 0 ); //this must reply first so the client recive any other thing, why??.. finally fixed it from the client side
 
 //variables for authentication
 char user[64]; //password
@@ -59,11 +60,15 @@ char password[64]; //useless
     // Receive until the peer shuts down the connection
 	//you are always inside this do until finishing the comms
     do {
-
+    	
+		if (is_auth)
+		{
+			char menu[1000] = "\nPlease choose your option:\n1) Read/Delete Messages\n2) Write Message to User\n3) Change config parameters\n4) Quit\nOption->";
+			rcnt = send(fd, menu, strlen(menu), 0);
+		}
         rcnt = recv(fd, recvbuf, recvbuflen, 0);
         
-		
-		rcnt = send( fd, recvbuf, rcnt, 0 ); //this must reply first so the client recive any other thing, why??..
+		//rcnt = send( fd, recvbuf, rcnt, 0 ); //this must reply first so the client recive any other thing, why??..
 		
 		
 		
@@ -104,17 +109,25 @@ char password[64]; //useless
 					if (strcmp(user, col2) == 0)
 					{
 						is_auth = true;
-						printf("nice");
+						printf("nice"); //hide this later
+						
+						
+						
+						
+						char authentication[1000] = "Welcome "; 
+						strcat(authentication, col1);
+						
+						
+						rcnt = send(fd, authentication, strlen(authentication), 0);
+						
+						
+						
+						
+						
 					}
-					else
-					{
-						printf("not the same");
-					}	
+						
 			  	}
-			  	else
-			  	{
-			  		is_auth = false; //must handle if the user changed the username without the password
-				}
+			  	
 			}
 			fclose(fp);//close the file whew!
 		 	//reading the txt file with the format given in APPENDIX (last page of the project details) is DONE!
