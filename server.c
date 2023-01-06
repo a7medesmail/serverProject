@@ -133,123 +133,155 @@ char password[64]; //useless
 		 	//reading the txt file with the format given in APPENDIX (last page of the project details) is DONE!
         }
         
-        if (strncmp(recvbuf, "LIST", 4) == 0) //listing the messages in the subdirectory for each user
-        //after two days of working, done reading the file name and display it in the required format
+        if (strncmp(recvbuf, "LIST", 4) == 0) //done listing perfectly with date order
         {
         	printf("list is working");
+        	
         	//change to the subdirectory
         	
         	char subD[100];
         	sprintf(subD, "%d", user_id); //int to string
-			printf("%s\n", subD);
+			printf("%s\n you are in: ", subD);
 			
-        	int result = chdir(subD);
+			sprintf(subD, "%d", user_id);
+        	chdir(subD);
         	
+        	int count = 1;
+	
+	//open the current directory
+	DIR *d;
+	struct dirent *dir;
+	d = opendir(".");
+	
+	if (d)
+	{
+		//create an array to save the data
+		int data[100][4];
+		int i = 0;
+		
+		while ((dir = readdir(d)) != NULL)
+		{
+			//list all .msg files
+			if (strstr(dir->d_name, ".msg") != NULL && dir->d_name[0] != '.' && dir->d_type == DT_REG)
+			{
+				//split the filename
+				char *token;
+				token = strtok(dir->d_name, "_");
 				
+				int unique_id = count;
+				int from_user_id;
+				int time_stamp;
+				int txt_size;
 				
-			char cwd[1024]; 
-		    getcwd(cwd, sizeof(cwd)); 
-		    printf("Current working dir: %s\n", cwd); 
-		    
-			
-		    char *ptr;
-		    char file_name[50];
-		    
-		    DIR *dir;
-		    dir = opendir(cwd); // i think it should be equal to 
-		    int counter = 100, i=1;
-		    int num =1;
-		    
-		    //I have no idea what are this new function, but it all help reading the file name
-		    struct dirent *entry;
-		   // const char list[1000]; //this will be sent
-			while( (entry = readdir( dir )) != NULL ) 
-			{  
-			    // copy the filename into a new variable
-			    char *filename = strdup(entry->d_name);
-			
-			    // extract info from filename
-			    
-			    int from_id, unix_time_stamp, octets;
-			    sscanf(filename, "%d_%d_%d.msg", &from_id, &unix_time_stamp, &octets);
-			
-			    // print the extracted info
-			    printf("%d %d %d %d\n", num, from_id, unix_time_stamp, octets);
-			
-			    // free the memory allocated for the new variable
-			    free(filename);
-			    num = ++i;
-			}
-			
-		//	rcnt = send(fd, welcome_msg, strlen(welcome_msg), 0);//done it is working, but the client should send a message first, why ?
-			    
-			    
-			    
-			    /*
-			    struct dirent *entry;
-			    int counter = 100, i=0;
-				while( counter > 0 ) {
-					printf("workiiiiiiiiiiing");
-					
-					
-				    char *filename = entry->d_name;
-				    
-				    
-				        // extract info from filename
-				    int num = i++;
-				    int from_id, unix_time_stamp, octets;
-				    sscanf(filename, "%d_%d_%d.msg", &from_id, &unix_time_stamp, &octets);
-				
-				    // print the extracted info
-				    printf("%d %d %d %d\n", num, from_id, unix_time_stamp, octets);
-
-				    
-				    /*
-				    // extract info from filename
-					char *p;
-					p = strtok(filename, "_");
-					int num = atoi(p);
-					
-					p = strtok(NULL, "_");
-					int from_id = atoi(p);
-					
-					p = strtok(NULL, "_");
-					int unix_time_stamp = atoi(p);
-					
-					p = strtok(NULL, ".msg");
-					int octets = atoi(p);
-					/*
-					// print the extracted info
-					printf("%d %d %d %d\n", num, from_id, unix_time_stamp, octets);
-					*/
-					
-				
-				
-				
-			    
-			    /*
-				for(;;) 
+				int j = 1;
+				while (token != NULL) 
 				{
-			        sprintf(file_name, "%d.msg", num);
-			        if(access(file_name, F_OK) != -1) 
+					if (j == 1)
+						time_stamp = atoi(token);
+					else if (j == 2)
+						from_user_id = atoi(token);
+					else if (j == 3)
+						txt_size = atoi(token);
+					
+					token = strtok(NULL, "_");
+					j++;
+				}
+				
+				//save the data to the array
+				data[i][0] = unique_id;
+				data[i][1] = from_user_id;
+				data[i][2] = time_stamp;
+				data[i][3] = txt_size;
+				
+				count++;
+				i++;
+					}
+				}
+				closedir(d);
+				
+				//sort the data based on time_stamp
+				int j;
+				for (i = 0; i < count-1; i++)
+				{
+					for (j = i+1; j < count-1; j++)
 					{
-						printf("workiiiiiiiiiiing");
-			            ptr = strtok(file_name, "_");
-			            printf("%d %s ", num, ptr);
-			            ptr = strtok(NULL, "_");
-			            printf("%s ", ptr);
-			            ptr = strtok(NULL, "_");
-			            printf("%s ", ptr);
-			            ptr = strtok(NULL, ".");
-			            printf("%s\n", ptr);
-			            num++;
-			        } 
-					else 
+						if (data[i][2] > data[j][2])
+						{
+							int temp[4];
+							memcpy(temp, data[i], sizeof(temp));
+							memcpy(data[i], data[j], sizeof(temp));
+							memcpy(data[j], temp, sizeof(temp));
+						}
+					}
+				}
+				
+				//display the result// hife it later
+				for (i = 0; i < count-1; i++)
+				{
+					printf("%d %d %d %d\n", data[i][0], data[i][1], data[i][2], data[i][3]);
+				}
+				
+				
+				//store the result into a string
+				char list[1000] = "";
+				for (i = 0; i < count-1; i++)
+				{
+					char to_append[30];
+					sprintf(to_append, "%d %d %d %d\n", data[i][0], data[i][1], data[i][2], data[i][3]);
+					strcat(list, to_append);
+				}
+				rcnt = send(fd, list, strlen(list), 0);
+				
+			}
+        	
+        	/* working but without date order
+        	int count = 1;
+	
+			//open the current directory
+			DIR *d;
+			struct dirent *dir;
+			d = opendir(".");
+			
+			if (d)
+			{
+				while ((dir = readdir(d)) != NULL)
+				{
+					//list all .msg files
+					if (strstr(dir->d_name, ".msg"))
 					{
-			            break;
-			        }
-			    }
-				*/	
+						//split the filename
+						char *token;
+						token = strtok(dir->d_name, "_");
+						
+						int unique_id = count;
+						int from_user_id;
+						int time_stamp;
+						int txt_size;
+						
+						int i = 1;
+						while (token != NULL) 
+						{
+							if (i == 1)
+								time_stamp = atoi(token);
+							else if (i == 2)
+								from_user_id = atoi(token);
+							else if (i == 3)
+								txt_size = atoi(token);
+							
+							token = strtok(NULL, "_");
+							i++;
+						}
+						
+						//display the new filename
+						printf("%d %d %d %d\n", unique_id, from_user_id, time_stamp, txt_size);
+						
+						count++;
+					}
+				}
+				closedir(d);
+			}*/
+        	
+
 		}
         
         
