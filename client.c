@@ -35,14 +35,14 @@ int nread;
 char buffer[BUF_LEN];
 
 
-	
+	//try while for this it might solve the problem
 	if (FD_ISSET(STDIN, &testfds)) 
     {
     	ioctl(STDIN,FIONREAD,&nread);
 		if (nread == 0) 
 		{
-       		printf("Keyboard done!\n");
-  			exit(0);
+       		printf("\n"); //this must be left so it will work, I have no idea how
+  			//exit(0);
 		}
         nread = read(STDIN, buffer, nread);
 		buffer[nread] = '\0';
@@ -54,8 +54,8 @@ char buffer[BUF_LEN];
 		ioctl(sock,FIONREAD,&nread);
 		if (nread == 0)
 		{
-			printf("Socket done!\n");
-			exit(0);
+			printf("\n"); //this must be left so it will work, I have no idea how
+			//exit(0);
 		}
 	    nread = read(sock, buffer, nread); //read means receiving
 		buffer[nread] = '\0';
@@ -158,7 +158,7 @@ while (1) {
 // don't care about writefds and exceptfds:
     ret=select(FD_SETSIZE, &testfds, (fd_set *)NULL, (fd_set *)NULL, &tv);
     test_fds(testfds,sock);//
-/*
+
     switch (ret) {
 case 0:
           printf("Timed out.\n");
@@ -169,7 +169,7 @@ case -1:
     default:
       test_fds(testfds,sock);
   break;
-    }*/
+    }
     
   }//while(1)
 }
