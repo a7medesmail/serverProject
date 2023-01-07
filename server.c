@@ -64,7 +64,7 @@ char password[64]; //useless
 bool checkList = false;
 bool checkRET = false;
 bool checkDEL = false;
-
+bool checkSEND = true;
 
 
     // Receive until the peer shuts down the connection
@@ -589,15 +589,23 @@ bool checkDEL = false;
 			// open message file
 		    FILE *fp = fopen(fullPath, "w");
 		    if (fp == NULL) {
+		    	checkSEND = false;
 		        printf("Error: Unable to open message file\n");
-		        return -1;
+		        char x[500]="-ERR message cannot send to ";
+				strcat(x, subD);
+			    rcnt = send(fd, x, strlen(x), 0);
 		    }
-		
-		    // save text message to file
-		    fprintf(fp, "%s", msg);
-		
-		    // close file
-		    fclose(fp);
+			if (checkSEND)
+			{
+				// save text message to file
+			    fprintf(fp, "%s", msg);
+			
+			    // close file
+			    fclose(fp);
+			    char x[500]="+OK message sends to ";
+			    strcat(x, subD);
+			    rcnt = send(fd, x, strlen(x), 0);
+			}
 		    
 		   
 		}//SEND
