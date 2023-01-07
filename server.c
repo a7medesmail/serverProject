@@ -79,7 +79,7 @@ bool checkDEL = false;
 		
 		
 		
-		if (strncmp(recvbuf, "USER", 4) == 0) //check if the user used USER command 
+		if (strncmp(recvbuf, "USER", 4) == 0 ) //check if the user used USER command 
 		// this part took me more than 8 hours, it can now authenticate by USER command, but there are extra letters, but it is working
 		{
 			
@@ -140,7 +140,7 @@ bool checkDEL = false;
 		 	//reading the txt file with the format given in APPENDIX (last page of the project details) is DONE!
         }
         
-        if (strncmp(recvbuf, "LIST", 4) == 0) //done listing perfectly with date order
+        else if (strncmp(recvbuf, "LIST", 4) == 0 && is_auth) //done listing perfectly with date order
         {
         	printf("list is working");
         	
@@ -254,8 +254,7 @@ bool checkDEL = false;
 				}
 		}//LIST
 		
-		
-        if (strncmp(recvbuf, "RET", 3) == 0) //read message
+        else if (strncmp(recvbuf, "RET", 3) == 0 && is_auth) //read message
         {
         	//printf("ret working");
         	int num;
@@ -405,7 +404,7 @@ bool checkDEL = false;
 			} 	
 		}//RET
 		
-		if (strncmp(recvbuf, "DEL", 3) == 0) //read message
+		else if (strncmp(recvbuf, "DEL", 3) == 0 && is_auth) //read message
         {
         	//printf("ret working");
         	int num;
@@ -529,7 +528,18 @@ bool checkDEL = false;
 				char ret[1000] = "-ERR no such message.";
 				rcnt = send(fd, ret, strlen(ret), 0);// send it
 			} 	
-		}//RET
+		}//DEL
+		
+		else if (strncmp(recvbuf, "QUIT", 4) == 0 )
+		{
+			close(fd);
+		}
+		
+		
+		else if(!is_auth)
+		{
+			rcnt = send(fd, "\n Please Use USER  UserID Password command to login\n", strlen("\n Please Use USER  UserID Password command to login\n"), 0);
+		}
         
 		
 		
