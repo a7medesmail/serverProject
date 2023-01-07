@@ -51,7 +51,7 @@ char recvbuf[DEFAULT_BUFLEN],bmsg[DEFAULT_BUFLEN];
 int  recvbuflen = DEFAULT_BUFLEN;
 bool is_auth = false;
 
-rcnt = recv(fd, recvbuf, recvbuflen, 0);
+
 const char* welcome_msg = "+OK My Chat Server v0.1 Ready."; //page 3 of the project, Server and Client comms
 rcnt = send(fd, welcome_msg, strlen(welcome_msg), 0);//done it is working, but the client should send a message first, why ?
 //rcnt = send( fd, recvbuf, rcnt, 0 ); //this must reply first so the client recive any other thing, why??.. finally fixed it from the client side
@@ -65,7 +65,8 @@ bool checkList = false;
 bool checkRET = false;
 bool checkDEL = false;
 bool checkSEND = true;
-
+bool check1 = false;
+bool r = false;
 
     // Receive until the peer shuts down the connection
 	//you are always inside this do until finishing the comms
@@ -85,15 +86,14 @@ bool checkSEND = true;
 		if (strncmp(recvbuf, "USER", 4) == 0 ) //check if the user used USER command 
 		// this part took me more than 8 hours, it can now authenticate by USER command, but there are extra letters, but it is working
 		{
-			
-            
-            sscanf(recvbuf, "USER %d %s", &user_id, user);
+			bool correct = false;
+			sscanf(recvbuf, "USER %d %s", &user_id, user);
             
             //sscanf(recvbuf, "myPass %s", password);
             
-            printf("user_id: %d\n", user_id);
+            /*printf("user_id: %d\n", user_id);
 				printf("user: %s\n", user);
-					printf("password : %s\n", password);
+					printf("password : %s\n", password);*/
             
             //to read the file given in -u user.txt, and check for username and password
 			FILE *fp = fopen("user.txt", "r"); //open file
@@ -119,7 +119,7 @@ bool checkSEND = true;
 					if (strcmp(user, col2) == 0)
 					{
 						is_auth = true;
-						printf("nice"); //hide this later
+					//	printf("nice"); //hide this later
 						
 						
 						
@@ -137,7 +137,7 @@ bool checkSEND = true;
 						char fullPath[250];
 						sprintf(fullPath, "%s/%s", cwd, subD);
 						mkdir(fullPath, 0700);
-						
+						correct = true;
 						
 					}
 						
@@ -146,17 +146,22 @@ bool checkSEND = true;
 			}
 			fclose(fp);//close the file whew!
 		 	//reading the txt file with the format given in APPENDIX (last page of the project details) is DONE!
+            if (!correct)
+            {
+            	rcnt = send(fd, "-ERR Either UserID or Password is wrong.\n", strlen("-ERR Either UserID or Password is wrong.\n"), 0);
+			}
+            
         }
         
         else if (strncmp(recvbuf, "LIST", 4) == 0 && is_auth) //done listing perfectly with date order
         {
-        	printf("list is working");
+        	//printf("list is working");
         	
         	//change to the subdirectory
         	
         	char subD[100];
         	sprintf(subD, "%d", user_id); //int to string
-			printf("%s\n you are in: ", subD);
+		//	printf("%s\n you are in: ", subD);
 			
 			sprintf(subD, "%d", user_id);
         	chdir(subD);
@@ -231,12 +236,6 @@ bool checkSEND = true;
 									memcpy(data[j], temp, sizeof(temp));
 								}
 							}
-						}
-						
-						//display the result// hide it later
-						for (i = 0; i < count-1; i++)
-						{
-							printf("%d %d %d %d\n", data[i][0], data[i][1], data[i][2], data[i][3]);
 						}
 						
 						
@@ -359,7 +358,7 @@ bool checkSEND = true;
 							}
 						}
 						
-						//display the result// hide it later
+						
 						for (i = 0; i < count-1; i++)
 						{
 							if (num == i+1) //when you arrive to the index, read and send it
@@ -538,10 +537,10 @@ bool checkSEND = true;
 			} 	
 		}//DEL
 		
-		else if (strncmp(recvbuf, "SEND", 4) == 0 )
+		else if (strncmp(recvbuf, "SEND", 4) == 0 && is_auth)
 		{
 			
-			printf("SEND WORKING");
+		//	printf("SEND WORKING");
 			int id;
 			char msg[1000];
 			sscanf(recvbuf, "SEND %d %s", &id, msg);
@@ -558,14 +557,14 @@ bool checkSEND = true;
 		    
 		    sprintf(filename, "%ld_%s_%d.msg", t, subD, txtSize);
 		    
-		    printf("filename = %s\n", filename);
+		    //printf("filename = %s\n", filename);
 		    
 		    
 		    
 			
 		    char fullPath2[250];
 			sprintf(fullPath2, "%s/%s", cwd, subD);
-        	printf("fullPath2 = %s\n", fullPath2);
+        	//printf("fullPath2 = %s\n", fullPath2);
         	// create directory if it doesn't exist
 			 /*struct stat st;
    			 if (stat(fullPath2, &st) == 0 && S_ISDIR(st.st_mode)) /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -584,13 +583,13 @@ bool checkSEND = true;
 			char fullPath[250];
 			sprintf(fullPath, "%s/%s", fullPath2, filename);
 		    
-		    printf("full path = %s\n", fullPath);
+		  //  printf("full path = %s\n", fullPath);
 		    
 			// open message file
 		    FILE *fp = fopen(fullPath, "w");
 		    if (fp == NULL) {
 		    	checkSEND = false;
-		        printf("Error: Unable to open message file\n");
+		        //printf("Error: Unable to open message file\n");
 		        char x[500]="-ERR message cannot send to ";
 				strcat(x, subD);
 			    rcnt = send(fd, x, strlen(x), 0);
@@ -624,11 +623,146 @@ bool checkSEND = true;
 			rcnt = send(fd, "\n Please Use USER  UserID Password command to login\n", strlen("\n Please Use USER  UserID Password command to login\n"), 0);
 		}
         
+		else if (strncmp(recvbuf, "1", 1) == 0 && is_auth)
+        {
+        	//rcnt = send(fd, "\n welcome\n", strlen("\n welcome\n"), 0);
+        	//change to the subdirectory
+
+			char subD[100];
+			sprintf(subD, "%d", user_id); //int to string
+			//	printf("%s\n you are in: ", subD);
+			
+			sprintf(subD, "%d", user_id);
+			chdir(subD);
+			
+			int count = 1;
+			
+			//open the current directory
+			DIR *d;
+			struct dirent *dir;
+			d = opendir(".");
+			
+			if (d)
+			{
+		    //create an array to save the data
+		    int data[100][4];
+		    int i = 0;
 		
+		    while ((dir = readdir(d)) != NULL)
+		    {
+		
+		        //list all .msg files
+		        if (strstr(dir->d_name, ".msg") != NULL && dir->d_name[0] != '.' && dir->d_type == DT_REG)
+		        {
+		            check1 = true;
+		            //split the filename
+		            char *token;
+		            token = strtok(dir->d_name, "_");
+		
+		            int unique_id = count;
+		            int from_user_id;
+		            int time_stamp;
+		            int txt_size;
+		
+		            int j = 1;
+		            while (token != NULL) 
+		            {
+		                if (j == 1)
+		                    time_stamp = atoi(token);
+		                else if (j == 2)
+		                    from_user_id = atoi(token);
+		                else if (j == 3)
+		                    txt_size = atoi(token);
+		
+		                token = strtok(NULL, "_");
+		                j++;
+		            }
+		
+		            //save the data to the array
+		            data[i][0] = unique_id;
+		            data[i][1] = from_user_id;
+		            data[i][2] = time_stamp;
+		            data[i][3] = txt_size;
+		
+		            count++;
+		            i++;
+		        }
+		    }
+	            closedir(d);
+	        if (check1) //to make sure it is not empty
+	        {
+	            //sort the data based on time_stamp
+	            int j;
+	            for (i = 0; i < count-1; i++)
+	            {
+	                for (j = i+1; j < count-1; j++)
+	                {
+	                    if (data[i][2] > data[j][2])
+	                    {
+	                        int temp[4];
+	                        memcpy(temp, data[i], sizeof(temp));
+	                        memcpy(data[i], data[j], sizeof(temp));
+	                        memcpy(data[j], temp, sizeof(temp));
+	                    }
+	                }
+	            }
+	
+	            //store the result into a string
+	            char list[1000] = "";
+	            char x[100] = "+OK listing follows. \n";
+	            strcat(list, x);
+	            for (i = 0; i < count-1; i++)
+	            {
+	                char to_append[30];
+	                sprintf(to_append, "%d From: %d,Date: %d, %d Byte\n", data[i][0], data[i][1], data[i][2], data[i][3]);
+	                strcat(list, to_append);
+	            }
+				//printf("ttttttt");
+	            rcnt = send(fd, list, strlen(list), 0);// send it
+	            r = true;
+	            /*if (strstr(recvbuf, "R") != NULL )
+	            {
+	            	printf("lllllll");
+	            	char *token;
+	            	token = strtok(NULL, "_");
+	            	int id = atoi(token);
+	            	printf("id is %d",id);
+				}
+				else if (strstr(recvbuf, "D") != NULL)
+				{
+					
+				}*/
+	        }
+	
+			}
+			if (!check1)
+			{
+			    char list[1000] = "-ERR there are no message";
+			    rcnt = send(fd, list, strlen(list), 0);// send it
+			}
+		}//1
+		
+		else if (strstr(recvbuf, "R") != NULL && r)
+		{
+		/*	char *token;
+        	token = strtok(NULL, "_");
+        	int id = atoi(token);
+        	printf("id is %d",id);*/
+		}
+		else if (strstr(recvbuf, "D") != NULL && r)
+		{
+			printf("lllllll");
+		}
+		else if (strncmp(recvbuf, "4", 1) == 0 )
+		{
+			rcnt = send(fd, "+OK Bye <UserID>. \n", strlen("+OK Bye <UserID>. \n"), 0);
+			close(fd);
+		}
 		
         if (rcnt > 0) 
 		{
-
+			//######### if this not working, the server is not functioning right #########
+			
             printf("Message: ");  //changed to show what recieved recvbuf
 
             printf(recvbuf);
@@ -683,7 +817,7 @@ int main(int argc, char *argv[])  //how to take arguments, argv is array of stri
 {
 	
 	
-	
+	/*
 	printf("argc: %d\n", argc); //all numbers of the arguments   //this should be a loop but to understand it better, I used one by one, also it must be hided later on
 	printf("argv[0]=%s\n", argv[0]); // name of the program " server "
 	printf("argv[1]=%s\n", argv[1]);// first argument -d
@@ -692,6 +826,7 @@ int main(int argc, char *argv[])  //how to take arguments, argv is array of stri
 	printf("argv[4]=%s\n", argv[4]);
 	printf("argv[5]=%s\n", argv[5]);// -u
 	printf("argv[6]=%s\n", argv[6]);// user.txt
+	*/
 	int port = atoi(argv[4]);//change port from string to int
 	
 	
@@ -710,7 +845,7 @@ int main(int argc, char *argv[])  //how to take arguments, argv is array of stri
     //print working directory in 3 lines, uses dirent.h library, to check where we are, must be hided later
 	
     getcwd(cwd, sizeof(cwd)); 
-    printf("Current working dir: %s\n", cwd); 
+  //  printf("Current working dir: %s\n", cwd); 
 	
 	
 
