@@ -19,6 +19,9 @@ For compile code : # gcc concurrent.c -o concurrent
 #include <stdlib.h>
 #include <dirent.h>
 #include <stdbool.h>
+#include <stdio.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 /* Socket API headers */
 
@@ -33,7 +36,7 @@ For compile code : # gcc concurrent.c -o concurrent
 /* Definations */
 
 #define DEFAULT_BUFLEN 512
-
+char cwd[1024]; //this is original working directory, it has user.txt and subdirectories for each user
 
 
 
@@ -128,7 +131,12 @@ bool checkDEL = false;
 						rcnt = send(fd, authentication, strlen(authentication), 0);
 						
 						
-						
+						//create unique directory for each user "Subdirectory"
+						char subD[100];
+						sprintf(subD, "%d", user_id); //int to string
+						char fullPath[250];
+						sprintf(fullPath, "%s/%s", cwd, subD);
+						mkdir(fullPath, 0700);
 						
 						
 					}
@@ -275,7 +283,7 @@ bool checkDEL = false;
         	sprintf(subD, "%d", user_id); //int to string
 		//	printf("%s\n you are in: ", subD);
 			
-			sprintf(subD, "%d", user_id);
+		//	sprintf(subD, "%d", user_id);
         	chdir(subD);
         	
         	int count = 1;
@@ -425,7 +433,7 @@ bool checkDEL = false;
         	sprintf(subD, "%d", user_id); //int to string
 		//	printf("%s\n you are in: ", subD);
 			
-			sprintf(subD, "%d", user_id);
+			//sprintf(subD, "%d", user_id);
         	chdir(subD);
         	
         	int count = 1;
@@ -530,8 +538,75 @@ bool checkDEL = false;
 			} 	
 		}//DEL
 		
+		else if (strncmp(recvbuf, "SEND", 4) == 0 )
+		{
+			
+			printf("SEND WORKING");
+			int id;
+			char msg[1000];
+			sscanf(recvbuf, "SEND %d %s", &id, msg);
+			
+			int txtSize = strlen(msg);
+			
+		    // create message filename
+		    char filename[1000];
+		    time_t t = time(NULL);
+		    struct tm *tm = localtime(&t);
+		    
+		    char subD[100];
+        	sprintf(subD, "%d", id); //int to string
+		    
+		    sprintf(filename, "%ld_%s_%d.msg", t, subD, txtSize);
+		    
+		    printf("filename = %s\n", filename);
+		    
+		    
+		    
+			
+		    char fullPath2[250];
+			sprintf(fullPath2, "%s/%s", cwd, subD);
+        	printf("fullPath2 = %s\n", fullPath2);
+        	// create directory if it doesn't exist
+			 /*struct stat st;
+   			 if (stat(fullPath2, &st) == 0 && S_ISDIR(st.st_mode)) /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			{
+				printf("NNNNNNNNNNNN");
+		        mkdir(fullPath2, 0700);
+		    }*/
+		    //change the directory
+			chdir(subD);
+			
+			
+			 
+		    
+			
+		    // create full path for message file
+			char fullPath[250];
+			sprintf(fullPath, "%s/%s", fullPath2, filename);
+		    
+		    printf("full path = %s\n", fullPath);
+		    
+			// open message file
+		    FILE *fp = fopen(fullPath, "w");
+		    if (fp == NULL) {
+		        printf("Error: Unable to open message file\n");
+		        return -1;
+		    }
+		
+		    // save text message to file
+		    fprintf(fp, "%s", msg);
+		
+		    // close file
+		    fclose(fp);
+		    
+		   
+		}//SEND
+		
+		
+		
 		else if (strncmp(recvbuf, "QUIT", 4) == 0 )
 		{
+			rcnt = send(fd, "+OK Bye <UserID>. \n", strlen("+OK Bye <UserID>. \n"), 0);
 			close(fd);
 		}
 		
@@ -616,7 +691,7 @@ int main(int argc, char *argv[])  //how to take arguments, argv is array of stri
 	//change the directory
 
         int result = chdir(argv[2]);
-
+		
         if (result == 0) {
             printf("Changed directory to %s\n", argv[2]);
         } else {
@@ -625,7 +700,7 @@ int main(int argc, char *argv[])  //how to take arguments, argv is array of stri
         
         
     //print working directory in 3 lines, uses dirent.h library, to check where we are, must be hided later
-	char cwd[1024]; 
+	
     getcwd(cwd, sizeof(cwd)); 
     printf("Current working dir: %s\n", cwd); 
 	
