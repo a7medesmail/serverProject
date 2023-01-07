@@ -161,7 +161,7 @@ while (1) {
 
     switch (ret) {
 case 0:
-          printf("Timed out.\n");
+          printf("");
   break;
 case -1:
           printf("Select problem.\n");
