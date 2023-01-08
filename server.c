@@ -718,6 +718,7 @@ bool r = false;
 	                strcat(list, to_append);
 	            }
 				//printf("ttttttt");
+				strcat(list, "Type R<id> for Reading, D<id> for deleting ->");
 	            rcnt = send(fd, list, strlen(list), 0);// send it
 	            r = true;
 	            /*if (strstr(recvbuf, "R") != NULL )
@@ -744,14 +745,256 @@ bool r = false;
 		
 		else if (strstr(recvbuf, "R") != NULL && r)
 		{
-		/*	char *token;
-        	token = strtok(NULL, "_");
-        	int id = atoi(token);
-        	printf("id is %d",id);*/
-		}
+			char *p = strtok(recvbuf, "R");
+			int number = atoi(p);
+			printf("the number is: %d", number);
+			
+			char subD[100];
+        	sprintf(subD, "%d", number); //int to string
+		//	printf("%s\n you are in: ", subD);
+			
+		//	sprintf(subD, "%d", user_id);
+        	chdir(subD);
+        	
+        	int count = 1;
+	
+			//open the current directory
+			DIR *d;
+			struct dirent *dir;
+			d = opendir(".");
+			
+			if (d)
+			{
+				//create an array to save the data
+				int data[100][4];
+				int i = 0;
+				
+				while ((dir = readdir(d)) != NULL)
+				{
+					
+					//list all .msg files
+					if (strstr(dir->d_name, ".msg") != NULL && dir->d_name[0] != '.' && dir->d_type == DT_REG)
+					{
+						checkRET = true;
+						//split the filename
+						char *token;
+						token = strtok(dir->d_name, "_");
+						
+						int unique_id = count;
+						int from_user_id;
+						int time_stamp;
+						int txt_size;
+						
+						int j = 1;
+						while (token != NULL) 
+						{
+							if (j == 1)
+								time_stamp = atoi(token);
+							else if (j == 2)
+								from_user_id = atoi(token);
+							else if (j == 3)
+								txt_size = atoi(token);
+							
+							token = strtok(NULL, "_");
+							j++;
+						}
+						
+						//save the data to the array
+						data[i][0] = unique_id;
+						data[i][1] = from_user_id;
+						data[i][2] = time_stamp;
+						data[i][3] = txt_size;
+						
+						count++;
+						i++;
+					}
+				}
+						closedir(d);
+					if (checkRET) //to make sure it is not empty
+					{
+						checkRET = false;//programming tricks
+						//sort the data based on time_stamp
+						int j;
+						for (i = 0; i < count-1; i++)
+						{
+							for (j = i+1; j < count-1; j++)
+							{
+								if (data[i][2] > data[j][2])
+								{
+									int temp[4];
+									memcpy(temp, data[i], sizeof(temp));
+									memcpy(data[i], data[j], sizeof(temp));
+									memcpy(data[j], temp, sizeof(temp));
+								}
+							}
+						}
+						
+						
+						for (i = 0; i < count-1; i++)
+						{
+							if (number == i+1) //when you arrive to the index, read and send it
+							{
+								checkRET = true;
+								//read the content of the file
+								char file_content[1000]="";
+								
+								char buf[1000] = "";
+								int size = 0;
+								
+								//open the file
+								sprintf(buf, "%d_%d_%d.msg", data[i][2], data[i][1], data[i][3]);
+								FILE *fptr;
+								fptr = fopen(buf, "rb");
+								
+								if (fptr == NULL)
+								{
+									printf("Error!");
+									exit(1);
+								}
+								
+								//read the file
+								fseek(fptr, 0, SEEK_END);
+								size = ftell(fptr);
+								fseek(fptr, 0, SEEK_SET);
+								fread(file_content, 1, size, fptr);
+								
+								char x[1000] = "+OK message follows \n";
+								strncat(x, file_content, strlen(file_content)); // strncat() vs. strcat()   I love programming
+								
+								//send the content
+								rcnt = send(fd, x, strlen(x), 0);
+								
+								fclose(fptr);
+								
+							}
+							
+						}
+						
+						
+						
+					}
+			
+			}
+			if (!checkRET)
+			{
+				char ret[1000] = "-ERR no such message.";
+				rcnt = send(fd, ret, strlen(ret), 0);// send it
+			}
+
+		}//R<ID>
 		else if (strstr(recvbuf, "D") != NULL && r)
 		{
-			printf("lllllll");
+			char *p = strtok(recvbuf, "D");
+			int number = atoi(p);
+			
+			
+			char subD[100];
+        	sprintf(subD, "%d", number); //int to string
+		//	printf("%s\n you are in: ", subD);
+			
+			//sprintf(subD, "%d", user_id);
+        	chdir(subD);
+        	
+        	int count = 1;
+	
+			//open the current directory
+			DIR *d;
+			struct dirent *dir;
+			d = opendir(".");
+			
+			if (d)
+			{
+				//create an array to save the data
+				int data[100][4];
+				int i = 0;
+				
+				while ((dir = readdir(d)) != NULL)
+				{
+					
+					//list all .msg files
+					if (strstr(dir->d_name, ".msg") != NULL && dir->d_name[0] != '.' && dir->d_type == DT_REG)
+					{
+						checkDEL = true;
+						//split the filename
+						char *token;
+						token = strtok(dir->d_name, "_");
+						
+						int unique_id = count;
+						int from_user_id;
+						int time_stamp;
+						int txt_size;
+						
+						int j = 1;
+						while (token != NULL) 
+						{
+							if (j == 1)
+								time_stamp = atoi(token);
+							else if (j == 2)
+								from_user_id = atoi(token);
+							else if (j == 3)
+								txt_size = atoi(token);
+							
+							token = strtok(NULL, "_");
+							j++;
+						}
+						
+						//save the data to the array
+						data[i][0] = unique_id;
+						data[i][1] = from_user_id;
+						data[i][2] = time_stamp;
+						data[i][3] = txt_size;
+						
+						count++;
+						i++;
+					}
+				}
+					closedir(d);
+				if (checkDEL) //to make sure it is not empty
+				{
+					checkDEL = false;//programming tricks
+					//sort the data based on time_stamp
+					int j;
+					for (i = 0; i < count-1; i++)
+					{
+						for (j = i+1; j < count-1; j++)
+						{
+							if (data[i][2] > data[j][2])
+							{
+								int temp[4];
+								memcpy(temp, data[i], sizeof(temp));
+								memcpy(data[i], data[j], sizeof(temp));
+								memcpy(data[j], temp, sizeof(temp));
+							}
+						}
+					}
+					
+					//display the result// hide it later
+					for (i = 0; i < count-1; i++)
+					{
+						if (number == i+1) //when you arrive to the index, DELETE and send it
+						{
+							checkDEL = true;
+							//read the content of the file
+							char buf[1000] = "";
+							
+							//choose the file
+							sprintf(buf, "%d_%d_%d.msg", data[i][2], data[i][1], data[i][3]);
+							
+							//delete the file
+							remove(buf);
+							
+							//send the content
+							rcnt = send(fd, "+OK message deleted\n", strlen("+OK message deleted\n"), 0);
+							
+						}
+					}	
+				}
+			}
+			if (!checkDEL)
+			{
+				char ret[1000] = "-ERR no such message.";
+				rcnt = send(fd, ret, strlen(ret), 0);// send it
+			} 
 		}
 		else if (strncmp(recvbuf, "4", 1) == 0 )
 		{
